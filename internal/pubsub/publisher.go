@@ -20,17 +20,26 @@ type publisher struct {
 	channel *amqp.Channel
 }
 
-func NewPublisher(uri string) (p Publisher, shutdown func(), err error) {
+func connect(uri string) (conn *amqp.Connection, channel *amqp.Channel, err error) {
 	uri = "amqp://user:password@localhost:7001/"
-	conn, err := amqp.Dial(uri)
+	conn, err = amqp.Dial(uri)
 	if err != nil {
 		err = fmt.Errorf("cannot connect to amqp, err: %w", err)
 		return
 	}
 
-	channel, err := conn.Channel()
+	channel, err = conn.Channel()
 	if err != nil {
 		err = fmt.Errorf("cannot get channel, err: %w", err)
+		return
+	}
+	return
+}
+
+func NewPublisher(uri string) (p Publisher, shutdown func(), err error) {
+	uri = "amqp://user:password@localhost:7001/"
+	conn, channel, err := connect(uri)
+	if err != nil {
 		return
 	}
 

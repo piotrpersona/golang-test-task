@@ -61,6 +61,7 @@ func (r repo) Save(ctx context.Context, m model.Message) (err error) {
 }
 
 func (r repo) Get(ctx context.Context, sender, receiver string) (msgs []model.Message, err error) {
+	msgs = make([]model.Message, 0)
 	bytes, getErr := r.rdb.Get(ctx, r.key(sender, receiver)).Bytes()
 	if getErr != nil {
 		if errors.Is(getErr, redis.Nil) {

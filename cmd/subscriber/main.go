@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"twitch_chat_analysis/internal/model"
+	"twitch_chat_analysis/internal/pubsub"
 	"twitch_chat_analysis/internal/repository"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -60,21 +61,11 @@ func main() {
 	handle := messageHandler(rdb)
 
 	uri := "amqp://user:password@localhost:7001/"
-	conn, err := amqp.Dial(uri)
+	s, shutdown, err := pubsub.NewSubscriber(uri)
 	exit(err)
+	defer shutdown()
 
-	channel, err := conn.Channel()
-	exit(err)
-
-	msgs, err := channel.Consume(
-		"messages", // queue
-		"",         // consumer
-		false,      // auto-ack
-		false,      // exclusive
-		false,      // no-local
-		false,      // no-wait
-		nil,        // args
-	)
+	err = s.Subscribe(ctx, handle)
 	exit(err)
 
 	sigc := make(chan os.Signal, 1)
@@ -83,23 +74,6 @@ func main() {
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case msg, more := <-msgs:
-				if !more {
-					return
-				}
-				err = handle(ctx, msg)
-				if err != nil {
-					log.Printf("error while processing message: %s", err)
-				}
-			}
-		}
-	}()
 
 	log.Printf("waiting for messages. To exit press CTRL+C")
 	sig := <-sigc

@@ -57,6 +57,11 @@ func main() {
 			c.JSON(http.StatusInternalServerError, messageResponse{Message: "cannot get messages"})
 			return
 		}
+		if len(msgs) == 0 {
+			c.JSON(http.StatusNotFound, msgs)
+			return
+		}
+
 		sort.Slice(msgs[:], func(i, j int) bool {
 			return msgs[i].Created.After(msgs[j].Created)
 		})
