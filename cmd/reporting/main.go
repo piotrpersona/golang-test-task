@@ -51,19 +51,12 @@ func main() {
 			c.JSON(http.StatusBadRequest, messageResponse{Message: "receiver empty"})
 		}
 
-		senderMsgs, err := getter.Get(ctx, sender, receiver)
+		msgs, err := getter.Get(ctx, sender, receiver)
 		if err != nil {
-			log.Printf("cannot get sender messages, err: %s\n", err)
-			c.JSON(http.StatusInternalServerError, messageResponse{Message: "cannot get sender messages"})
+			log.Printf("cannot get messages, err: %s\n", err)
+			c.JSON(http.StatusInternalServerError, messageResponse{Message: "cannot get messages"})
 			return
 		}
-		receiverMsgs, err := getter.Get(ctx, receiver, sender)
-		if err != nil {
-			log.Printf("cannot get receiver messages, err: %s\n", err)
-			c.JSON(http.StatusInternalServerError, messageResponse{Message: "cannot get receiver messages"})
-			return
-		}
-		msgs := append(senderMsgs, receiverMsgs...)
 		sort.Slice(msgs[:], func(i, j int) bool {
 			return msgs[i].Created.After(msgs[j].Created)
 		})
