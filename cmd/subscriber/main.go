@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"twitch_chat_analysis/internal/config"
 	"twitch_chat_analysis/internal/model"
 	"twitch_chat_analysis/internal/pubsub"
 	"twitch_chat_analysis/internal/repository"
@@ -52,8 +53,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	cfg := config.Load()
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     cfg.RedisAddr,
 		Password: "",
 		DB:       0,
 	})
@@ -61,8 +64,7 @@ func main() {
 
 	handle := messageHandler(rdb)
 
-	uri := "amqp://user:password@localhost:7001/"
-	s, shutdown, err := pubsub.NewSubscriber(uri)
+	s, shutdown, err := pubsub.NewSubscriber(cfg.RabbitConn)
 	exit(err)
 	defer shutdown()
 

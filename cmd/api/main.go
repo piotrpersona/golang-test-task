@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"twitch_chat_analysis/internal/config"
 	"twitch_chat_analysis/internal/model"
 	"twitch_chat_analysis/internal/pubsub"
 
@@ -35,8 +36,9 @@ type messageResponse struct {
 func main() {
 	r := gin.Default()
 
-	uri := "amqp://user:password@localhost:7001/"
-	publisher, shutdown, err := pubsub.NewPublisher(uri)
+	cfg := config.Load()
+
+	publisher, shutdown, err := pubsub.NewPublisher(cfg.RabbitConn)
 	exit(err)
 	defer shutdown()
 
