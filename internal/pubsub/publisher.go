@@ -5,31 +5,28 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"twitch_chat_analysis/internal/model"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 const messageQ = "messages"
 
-type Message struct {
-	Sender, Receiver, Message string
-}
-
 type Publisher interface {
-	Publish(ctx context.Context, m *Message) (err error)
+	Publish(ctx context.Context, m *model.Message) (err error)
 }
 
 type publisher struct {
 	channel *amqp.Channel
 }
 
-func NewPublisher(uri string) (p Publisher, err error) {
+func NewPublisher(uri string) (p Publisher, shutdown func(), err error) {
 	uri = "amqp://user:password@localhost:7001/"
 	conn, err := amqp.Dial(uri)
 	if err != nil {
 		err = fmt.Errorf("cannot connect to amqp, err: %w", err)
 		return
 	}
-	// defer conn.Close()
 
 	channel, err := conn.Channel()
 	if err != nil {
@@ -37,13 +34,29 @@ func NewPublisher(uri string) (p Publisher, err error) {
 		return
 	}
 
+	_, err = channel.QueueDeclare(
+		messageQ, // name
+		false,    // durable
+		false,    // delete when unused
+		false,    // exclusive
+		false,    // no-wait
+		nil,      // arguments
+	)
+	if err != nil {
+		err = fmt.Errorf("cannot decalre Q, err: %w", err)
+		return
+	}
+
 	p = &publisher{
 		channel: channel,
+	}
+	shutdown = func() {
+		conn.Close()
 	}
 	return
 }
 
-func (p publisher) Publish(ctx context.Context, m *Message) (err error) {
+func (p publisher) Publish(ctx context.Context, m *model.Message) (err error) {
 	body, err := json.Marshal(m)
 	if err != nil {
 		err = fmt.Errorf("cannot marshal message, err: %w", err)

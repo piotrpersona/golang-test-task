@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"twitch_chat_analysis/internal/model"
 	"twitch_chat_analysis/internal/pubsub"
 
 	"github.com/gin-gonic/gin"
@@ -32,8 +34,9 @@ type messageResponse struct {
 func main() {
 	r := gin.Default()
 
-	publisher, err := pubsub.NewPublisher("")
+	publisher, shutdown, err := pubsub.NewPublisher("")
 	exit(err)
+	defer shutdown()
 
 	r.POST("/message", func(c *gin.Context) {
 		ctx := c.Request.Context()
@@ -45,10 +48,11 @@ func main() {
 			return
 		}
 
-		err = publisher.Publish(ctx, &pubsub.Message{
+		err = publisher.Publish(ctx, &model.Message{
 			Sender:   req.Sender,
 			Receiver: req.Receiver,
 			Message:  req.Message,
+			Created:  time.Now().UTC(),
 		})
 		if err != nil {
 			log.Printf("cannot publish message, err: %s\n", err)
