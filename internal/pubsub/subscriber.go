@@ -19,7 +19,6 @@ type subscriber struct {
 }
 
 func NewSubscriber(uri string) (s Subscriber, shutdown func(), err error) {
-	uri = "amqp://user:password@localhost:7001/"
 	conn, channel, err := connect(uri)
 	if err != nil {
 		return

@@ -34,7 +34,8 @@ type messageResponse struct {
 func main() {
 	r := gin.Default()
 
-	publisher, shutdown, err := pubsub.NewPublisher("")
+	uri := "amqp://user:password@localhost:7001/"
+	publisher, shutdown, err := pubsub.NewPublisher(uri)
 	exit(err)
 	defer shutdown()
 

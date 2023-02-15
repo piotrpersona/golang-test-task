@@ -37,7 +37,6 @@ func connect(uri string) (conn *amqp.Connection, channel *amqp.Channel, err erro
 }
 
 func NewPublisher(uri string) (p Publisher, shutdown func(), err error) {
-	uri = "amqp://user:password@localhost:7001/"
 	conn, channel, err := connect(uri)
 	if err != nil {
 		return
