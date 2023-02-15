@@ -24,6 +24,7 @@ type messageResponse struct {
 	Message string
 }
 
+// TODO: Read DB & MQ connection from ENV
 func main() {
 	mainCtx := context.Background()
 

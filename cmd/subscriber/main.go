@@ -47,6 +47,7 @@ func messageHandler(rdb *redis.Client) func(ctx context.Context, m amqp.Delivery
 	}
 }
 
+// TODO: Read DB & MQ connection from ENV
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

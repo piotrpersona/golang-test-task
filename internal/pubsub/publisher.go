@@ -21,7 +21,6 @@ type publisher struct {
 }
 
 func connect(uri string) (conn *amqp.Connection, channel *amqp.Channel, err error) {
-	uri = "amqp://user:password@localhost:7001/"
 	conn, err = amqp.Dial(uri)
 	if err != nil {
 		err = fmt.Errorf("cannot connect to amqp, err: %w", err)
